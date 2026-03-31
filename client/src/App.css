@@ -1,0 +1,17 @@
+.container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 48px;
+  box-sizing: border-box;
+}
+.content {
+  width: min(900px, 95%);
+  margin: 0;
+  padding: 0;
+}
+.content > * {
+  width: 100%;
+}
