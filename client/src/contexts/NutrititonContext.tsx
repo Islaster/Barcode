@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useMemo, useEffect } from "react";
 import type { FoodObject, NutritionApi } from "../constants/nutritionData";
+import { debug } from "../utils/debug";
 
 type NutritionContextValue = {
   barcode: string;
@@ -17,77 +18,135 @@ type NutritionContextValue = {
   tableOn: boolean;
   setTableOn: React.Dispatch<React.SetStateAction<boolean>>;
 };
+
 const NutritionContext = createContext<NutritionContextValue | null>(null);
+
 export function NutritionProvider({ children }: { children: React.ReactNode }) {
   const [barcode, setBarcode] = useState("");
   const [productData, setProductData] = useState<NutritionApi | undefined>(
     undefined
   );
-  const today = new Date().toLocaleDateString();
-  const [tableItems, setTableItems] = useState<FoodObject[]>(() => {
-    try {
-      const dailyLog = localStorage.getItem("dailyLog");
-      if (!dailyLog) return [];
-      const parsed = JSON.parse(dailyLog);
-      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].tableItems) {
-        return parsed[0].tableItems;
-      }
-      return [];
-    } catch {
-      return [];
-    }
-  });
   const [loading, setLoading] = useState<boolean>(false);
   const [scannerOn, setScannerOn] = useState<boolean>(false);
   const [tableOn, setTableOn] = useState<boolean>(true);
+  const today = new Date().toLocaleDateString();
 
-  useEffect(() => {
-    const dailyLog = localStorage.getItem("dailyLog");
-    if (
-      typeof dailyLog === "string" &&
-      JSON.parse(dailyLog)[0].date !== today
-    ) {
-      localStorage.removeItem("dailyLog");
+  // Initialize tableItems from localStorage safely
+  const [tableItems, setTableItems] = useState<FoodObject[]>(() => {
+    try {
+      const dailyLog = localStorage.getItem("dailyLog");
+      debug.log("storage", `Initial localStorage read:`, dailyLog);
+
+      if (!dailyLog) {
+        debug.log("storage", "No dailyLog found — starting fresh");
+        return [];
+      }
+
+      const parsed = JSON.parse(dailyLog);
+      debug.log("storage", "Parsed dailyLog:", parsed);
+
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.tableItems) {
+        debug.log(
+          "storage",
+          "Restored tableItems from localStorage ✅",
+          parsed[0].tableItems
+        );
+        return parsed[0].tableItems;
+      }
+
+      debug.warn("storage", "dailyLog exists but has unexpected shape", parsed);
+      return [];
+    } catch (err) {
+      debug.error("storage", "Failed to parse dailyLog from localStorage", err);
+      return [];
     }
-  }, []);
+  });
 
+  // Process productData when it changes
   useEffect(() => {
-    const name = productData?.data.food.food_name;
-    const protein = productData?.data.food.servings.serving[0].protein;
-    const calories = productData?.data.food.servings.serving[0].calories;
+    debug.log("context", "productData changed:", productData);
+
+    if (!productData) {
+      debug.log("context", "productData is undefined — skipping");
+      return;
+    }
+
+    // Validate the entire data path
+    const food = productData?.data?.food;
+    if (!food) {
+      debug.error("context", "Missing 'data.food' in productData", productData);
+      return;
+    }
+
+    const servings = food.servings?.serving;
+    if (!servings || !Array.isArray(servings) || servings.length === 0) {
+      debug.error("context", "Missing or empty 'servings.serving' array", food);
+      return;
+    }
+
+    const name = food.food_name;
+    const protein = servings[0].protein;
+    const calories = servings[0].calories;
+
+    debug.log("context", "Extracted values:", { name, protein, calories });
+
     if (typeof name !== "string") {
-      console.log("name isnt a string check productData.");
+      debug.error("context", `name is not a string: ${typeof name}`, name);
       return;
     }
     if (typeof protein !== "string") {
-      console.log("protein isnt a string check productData.");
+      debug.error(
+        "context",
+        `protein is not a string: ${typeof protein}`,
+        protein
+      );
       return;
     }
     if (typeof calories !== "string") {
-      console.log("calories isnt a string check productData.");
+      debug.error(
+        "context",
+        `calories is not a string: ${typeof calories}`,
+        calories
+      );
       return;
     }
-    setTableItems((prev) => [
-      ...prev,
-      {
-        name: name,
-        data: [
-          { title: "protein", data: protein },
-          { title: "calories", data: calories },
-        ],
-      },
-    ]);
-    console.log(productData);
+
+    const newItem: FoodObject = {
+      name,
+      data: [
+        { title: "protein", data: protein },
+        { title: "calories", data: calories },
+      ],
+    };
+
+    debug.log("context", "Adding new item to tableItems:", newItem);
+
+    setTableItems((prev) => {
+      const updated = [...prev, newItem];
+      debug.log(
+        "context",
+        `tableItems updated: ${prev.length} → ${updated.length}`,
+        updated
+      );
+      return updated;
+    });
   }, [productData]);
 
+  // Sync tableItems to localStorage
   useEffect(() => {
-    if (tableItems.length > 0)
-      localStorage.setItem(
-        "dailyLog",
-        JSON.stringify([{ date: today, tableItems }])
-      );
+    debug.log(
+      "storage",
+      `tableItems changed (length: ${tableItems.length})`,
+      tableItems
+    );
+
+    if (tableItems.length > 0) {
+      const payload = [{ date: today, tableItems }];
+      debug.log("storage", "Saving to localStorage:", payload);
+      localStorage.setItem("dailyLog", JSON.stringify(payload));
+    }
   }, [tableItems]);
-  console.log("product data: ", productData);
+
   const value = useMemo(
     () => ({
       barcode,
@@ -116,7 +175,9 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
 export function useNutritionContext() {
   const ctx = useContext(NutritionContext);
   if (!ctx) {
-    throw new Error("usePlanContext must be used inside <PlanProvider />");
+    throw new Error(
+      "useNutritionContext must be used inside <NutritionProvider />"
+    );
   }
   return ctx;
 }
