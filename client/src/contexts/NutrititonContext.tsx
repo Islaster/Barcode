@@ -52,7 +52,6 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    console.log(productData);
     const name = productData?.data.food.food_name;
     const protein = productData?.data.food.servings.serving[0].protein;
     const calories = productData?.data.food.servings.serving[0].calories;
@@ -88,7 +87,7 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
         JSON.stringify([{ date: today, tableItems }])
       );
   }, [tableItems]);
-
+  console.log("product data: ", productData);
   const value = useMemo(
     () => ({
       barcode,
