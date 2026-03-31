@@ -1,16 +1,19 @@
 import { useNutritionContext } from "../../contexts/NutrititonContext";
-import { debug } from "../../utils/debug";
 import "./styles.css";
+import { debug } from "../../utils/debug";
 
 export default function NutritionTable() {
   const { tableItems, setTableOn, setScannerOn } = useNutritionContext();
-
-  debug.log(
-    "table",
-    `Rendering table with ${tableItems.length} items`,
-    tableItems
-  );
-
+  const caloriesItems: number[] = [];
+  const proteinItems: number[] = [];
+  tableItems.forEach((item) => {
+    caloriesItems.push(
+      parseInt(item.data.filter((i) => i.title === "calories")[0].data)
+    );
+    proteinItems.push(
+      parseInt(item.data.filter((i) => i.title === "protein")[0].data)
+    );
+  });
   return (
     <div className="nutrition-table-page">
       <div className="nutrition-table-card">
@@ -18,7 +21,6 @@ export default function NutritionTable() {
           <button
             className="add-item-btn"
             onClick={() => {
-              debug.log("table", "Add Item clicked — switching to scanner");
               setTableOn(false);
               setScannerOn(true);
             }}
@@ -73,6 +75,32 @@ export default function NutritionTable() {
               </tr>
             )}
           </tbody>
+          {tableItems.length > 0 && (
+            <tfoot>
+              <tr>
+                <td>
+                  <strong>Total</strong>
+                </td>
+                <td>
+                  <strong>
+                    {caloriesItems.reduce(
+                      (acc, currentValue) => acc + currentValue,
+                      0
+                    )}
+                  </strong>
+                </td>
+                <td>
+                  <strong>
+                    {proteinItems.reduce(
+                      (acc, currentValue) => acc + currentValue,
+                      0
+                    )}
+                    g
+                  </strong>
+                </td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
     </div>
