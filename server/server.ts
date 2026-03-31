@@ -51,8 +51,8 @@ app.get("/health", (req, res) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     env: {
-      fatsecretKey: process.env.FATSECRET_KEY ? "set" : "missing",
-      fatsecretSecret: process.env.FATSECRET_SECRET ? "set" : "missing",
+      fatsecretKey: process.env.FATSECRET_CLIENT_ID ? "set" : "missing",
+      fatsecretSecret: process.env.FATSECRET_CLIENT_SECRET ? "set" : "missing",
     },
   });
 });
