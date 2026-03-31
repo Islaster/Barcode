@@ -76,10 +76,10 @@ export default function NutritionTable() {
                 return (
                   <tr key={index}>
                     <td>{item.name}</td>
-                    <td>{calories ?? "N/A"}</td>
-                    <td>{protein ?? "N/A"}</td>
-                    <td>{fats ?? "N/A"}</td>
-                    <td>{sodium ?? "N/A"}</td>
+                    <td>{calories ?? 0}</td>
+                    <td>{protein ?? 0}</td>
+                    <td>{fats ?? 0}</td>
+                    <td>{sodium ?? 0}</td>
                   </tr>
                 );
               })
