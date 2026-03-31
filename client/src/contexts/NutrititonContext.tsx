@@ -83,10 +83,11 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       debug.error("context", "Missing or empty 'servings.serving' array", food);
       return;
     }
-
     const name = food.food_name;
     const protein = servings[0].protein;
     const calories = servings[0].calories;
+    const fats = servings[0].fat;
+    const sodium = servings[0].sodium;
 
     debug.log("context", "Extracted values:", { name, protein, calories });
 
@@ -110,12 +111,26 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       );
       return;
     }
+    if (typeof fats !== "string") {
+      debug.error("context", `calories is not a string: ${typeof fats}`, fats);
+      return;
+    }
+    if (typeof sodium !== "string") {
+      debug.error(
+        "context",
+        `calories is not a string: ${typeof sodium}`,
+        sodium
+      );
+      return;
+    }
 
     const newItem: FoodObject = {
       name,
       data: [
         { title: "protein", data: protein },
         { title: "calories", data: calories },
+        { title: "fats", data: fats },
+        { title: "sodium", data: sodium },
       ],
     };
 
