@@ -8,6 +8,7 @@ import { useNutritionContext } from "../contexts/NutrititonContext";
 import { fields } from "../constants/nutritionData";
 
 export default function BarcodeScanner() {
+  const serverUrl = import.meta.env.VITE_SERVER_URL;
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const { setBarcode, setLoading, setProductData, setScannerOn, setTableOn } =
@@ -84,7 +85,7 @@ export default function BarcodeScanner() {
   async function fetchProductByBarcode(barcode: string): Promise<any> {
     fields.join(",");
 
-    const res = await fetch(`http://localhost:3001/api/barcodes/${barcode}`);
+    const res = await fetch(`${serverUrl}/api/barcodes/${barcode}`);
 
     if (!res.ok) {
       throw new Error("Failed to fetch product");
