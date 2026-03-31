@@ -21,64 +21,64 @@ export default function BarcodeScanner() {
   ]);
 
   useEffect(() => {
-    return () => {
-      const scanner = scannerRef.current;
-      if (scanner?.isScanning) {
-        scanner.stop().catch(() => {});
-      }
+    let scanner: Html5Qrcode | null = null;
 
-      (async () => {
-        if (isRunning) return;
+    (async () => {
+      if (isRunning) return;
 
-        try {
-          const scanner = new Html5Qrcode("reader", {
-            verbose: true,
-            formatsToSupport: [
-              Html5QrcodeSupportedFormats.UPC_A,
-              Html5QrcodeSupportedFormats.UPC_E,
-              Html5QrcodeSupportedFormats.EAN_8,
-              Html5QrcodeSupportedFormats.EAN_13,
-            ],
-          });
-          scannerRef.current = scanner;
+      try {
+        scanner = new Html5Qrcode("reader", {
+          verbose: true,
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.EAN_13,
+          ],
+        });
+        scannerRef.current = scanner;
 
-          await scanner.start(
-            { facingMode: "environment" },
-            {
-              fps: 10,
-              qrbox: { width: 280, height: 140 },
-            },
-            async (decodedText, decodedResult: Html5QrcodeResult) => {
-              const format = decodedResult.result.format?.format;
-              if (format === undefined) {
-                console.log("No barcode format found in result");
-                return;
-              }
-
-              if (!allowedFormats.has(format)) {
-                console.log("Unsupported barcode format");
-                return;
-              }
-              // stop after first successful scan
-              if (scannerRef.current?.isScanning) {
-                await scannerRef.current.stop();
-              }
-
-              setIsRunning(false);
-              handleDetected(decodedText);
-            },
-            () => {
-              // ignore scan misses
+        await scanner.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 280, height: 140 },
+          },
+          async (decodedText, decodedResult: Html5QrcodeResult) => {
+            const format = decodedResult.result.format?.format;
+            if (format === undefined) {
+              console.log("No barcode format found in result");
+              return;
             }
-          );
 
-          setIsRunning(true);
-        } catch (err) {
-          console.error(
-            err instanceof Error ? err.message : "Failed to start scanner"
-          );
-        }
-      })();
+            if (!allowedFormats.has(format)) {
+              console.log("Unsupported barcode format");
+              return;
+            }
+
+            if (scannerRef.current?.isScanning) {
+              await scannerRef.current.stop();
+            }
+
+            setIsRunning(false);
+            handleDetected(decodedText);
+          },
+          () => {}
+        );
+
+        setIsRunning(true);
+      } catch (err) {
+        console.error(
+          err instanceof Error ? err.message : "Failed to start scanner"
+        );
+      }
+    })();
+
+    // Cleanup runs on unmount - SEPARATE from start logic
+    return () => {
+      if (scannerRef.current?.isScanning) {
+        scannerRef.current.stop().catch(() => {});
+      }
     };
   }, []);
 
