@@ -47,7 +47,68 @@ export default function BarcodeScanner() {
         height: readerEl.offsetHeight,
       });
     }
+    (async () => {
+      if (isRunning) {
+        debug.warn("scanner", "startScanner called but already running");
+        return;
+      }
 
+      debug.log("scanner", "Starting scanner...");
+
+      try {
+        const scanner = new Html5Qrcode("reader", {
+          verbose: false,
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.EAN_13,
+          ],
+        });
+        scannerRef.current = scanner;
+
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 280, height: 140 } },
+          async (decodedText, decodedResult: Html5QrcodeResult) => {
+            const format = decodedResult.result.format?.format;
+            debug.log(
+              "scanner",
+              `Scan result — format: ${format}, text: ${decodedText}`
+            );
+
+            if (format === undefined) {
+              debug.warn("scanner", "No barcode format found in result");
+              return;
+            }
+            if (!allowedFormats.has(format)) {
+              debug.warn("scanner", `Unsupported format: ${format}`);
+              return;
+            }
+
+            if (scannerRef.current?.isScanning) {
+              await scannerRef.current.stop();
+              debug.log("scanner", "Scanner stopped after successful scan");
+            }
+
+            setIsRunning(false);
+            handleDetected(decodedText);
+          },
+          () => {}
+        );
+
+        setIsRunning(true);
+        debug.log("scanner", "Scanner started successfully ✅");
+      } catch (err) {
+        debug.error("scanner", "Failed to start scanner", err);
+        if (err instanceof Error && err.message.includes("Permission")) {
+          debug.error(
+            "scanner",
+            "Camera permission denied — user must allow camera access"
+          );
+        }
+      }
+    })();
     return () => {
       debug.log("scanner", "Component unmounting — stopping scanner");
       if (scannerRef.current?.isScanning) {
@@ -140,84 +201,6 @@ export default function BarcodeScanner() {
     }
   };
 
-  const startScanner = async () => {
-    if (isRunning) {
-      debug.warn("scanner", "startScanner called but already running");
-      return;
-    }
-
-    debug.log("scanner", "Starting scanner...");
-
-    try {
-      const scanner = new Html5Qrcode("reader", {
-        verbose: false,
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.EAN_13,
-        ],
-      });
-      scannerRef.current = scanner;
-
-      await scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 280, height: 140 } },
-        async (decodedText, decodedResult: Html5QrcodeResult) => {
-          const format = decodedResult.result.format?.format;
-          debug.log(
-            "scanner",
-            `Scan result — format: ${format}, text: ${decodedText}`
-          );
-
-          if (format === undefined) {
-            debug.warn("scanner", "No barcode format found in result");
-            return;
-          }
-          if (!allowedFormats.has(format)) {
-            debug.warn("scanner", `Unsupported format: ${format}`);
-            return;
-          }
-
-          if (scannerRef.current?.isScanning) {
-            await scannerRef.current.stop();
-            debug.log("scanner", "Scanner stopped after successful scan");
-          }
-
-          setIsRunning(false);
-          handleDetected(decodedText);
-        },
-        () => {}
-      );
-
-      setIsRunning(true);
-      debug.log("scanner", "Scanner started successfully ✅");
-    } catch (err) {
-      debug.error("scanner", "Failed to start scanner", err);
-      if (err instanceof Error && err.message.includes("Permission")) {
-        debug.error(
-          "scanner",
-          "Camera permission denied — user must allow camera access"
-        );
-      }
-    }
-  };
-
-  const stopScanner = async () => {
-    debug.log("scanner", "Stopping scanner...");
-    try {
-      if (scannerRef.current?.isScanning) {
-        await scannerRef.current.stop();
-        debug.log("scanner", "Scanner stopped ✅");
-      } else {
-        debug.warn("scanner", "Scanner was not running");
-      }
-    } catch (err) {
-      debug.error("scanner", "Failed to stop scanner", err);
-    }
-    setIsRunning(false);
-  };
-
   return (
     <div
       style={{
@@ -238,14 +221,6 @@ export default function BarcodeScanner() {
           overflow: "hidden",
         }}
       />
-      <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
-        <button onClick={startScanner} disabled={isRunning}>
-          Start scanner
-        </button>
-        <button onClick={stopScanner} disabled={!isRunning}>
-          Stop scanner
-        </button>
-      </div>
     </div>
   );
 }
