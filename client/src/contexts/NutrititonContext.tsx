@@ -78,6 +78,7 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
         ],
       },
     ]);
+    console.log(productData);
   }, [productData]);
 
   useEffect(() => {
