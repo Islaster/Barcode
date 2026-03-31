@@ -23,6 +23,14 @@ export default function BarcodeScanner() {
 
   // Validate environment on mount
   useEffect(() => {
+    // Guard against double mount from React Strict Mode
+    if (scannerRef.current) {
+      debug.warn(
+        "scanner",
+        "Scanner already initialized — skipping duplicate mount"
+      );
+      return;
+    }
     debug.log("scanner", "Component mounted");
     debug.log("scanner", `VITE_SERVER_URL: ${serverUrl}`);
 
