@@ -10,7 +10,7 @@ type TokenResponse = {
 let cachedToken: string | null = null;
 let expiresAt = 0;
 
-export async function getFatSecretAccessToken(): Promise<string> {
+export async function getFatSecretAccessToken(scope: string): Promise<string> {
   const now = Date.now();
 
   if (cachedToken && now < expiresAt) {
@@ -35,10 +35,16 @@ export async function getFatSecretAccessToken(): Promise<string> {
     `${env.fatsecretClientId}:${env.fatsecretClientSecret}`
   ).toString("base64");
 
-  const body = new URLSearchParams({
-    grant_type: "client_credentials",
-    scope: env.fatsecretScope,
-  });
+  const body =
+    scope === "barcode"
+      ? new URLSearchParams({
+          grant_type: "client_credentials",
+          scope: env.fatsecretScope,
+        })
+      : new URLSearchParams({
+          grant_type: "client_credentials",
+          scope: process.env.FATSECRET_SEARCH_SCOPE ?? "premier",
+        });
 
   let response: globalThis.Response;
   try {

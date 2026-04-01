@@ -1,9 +1,12 @@
 import { useNutritionContext } from "../../contexts/NutrititonContext";
+import { useState } from "react";
 import "./styles.css";
 import { debug } from "../../utils/debug";
 
 export default function NutritionTable() {
-  const { tableItems, setTableOn, setScannerOn } = useNutritionContext();
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const { tableItems, setTableOn, setScannerOn, setSearchOn } =
+    useNutritionContext();
   const caloriesItems: number[] = [];
   const proteinItems: number[] = [];
   const fatsItems: number[] = [];
@@ -24,20 +27,68 @@ export default function NutritionTable() {
       parseInt(item.data.filter((i) => i.title === "sodium")[0]?.data ?? 0)
     );
   });
+
+  const handleAddItemClick = () => {
+    setShowAddItemModal(true);
+  };
+
+  const handleSearchByBarcode = () => {
+    debug.log("table", "Opening barcode scanner from Add Item modal");
+    setShowAddItemModal(false);
+    setTableOn(false);
+    setScannerOn(true);
+  };
+
+  const handleSearchByName = () => {
+    debug.log("table", "Opening name search from Add Item modal");
+    setShowAddItemModal(false);
+    setTableOn(false);
+    setSearchOn(true);
+  };
+
+  const closeModal = () => {
+    setShowAddItemModal(false);
+  };
+
   return (
     <div className="nutrition-table-page">
       <div className="nutrition-table-card">
         <div className="nutrition-table-actions">
-          <button
-            className="add-item-btn"
-            onClick={() => {
-              setTableOn(false);
-              setScannerOn(true);
-            }}
-          >
+          <button className="add-item-btn" onClick={handleAddItemClick}>
             Add Item
           </button>
         </div>
+        {showAddItemModal && (
+          <div className="add-item-modal-overlay" onClick={closeModal}>
+            <div
+              className="add-item-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3>Select how you want to add an item</h3>
+              <p>Choose to search by name or scan a barcode.</p>
+
+              <div className="add-item-modal-actions">
+                <button
+                  className="add-item-option-btn"
+                  onClick={handleSearchByName}
+                >
+                  Search by Name
+                </button>
+
+                <button
+                  className="add-item-option-btn"
+                  onClick={handleSearchByBarcode}
+                >
+                  Scan Barcode
+                </button>
+              </div>
+
+              <button className="add-item-cancel-btn" onClick={closeModal}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
         <table className="nutrition-table">
           <thead>
             <tr>

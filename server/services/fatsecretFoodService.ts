@@ -6,7 +6,7 @@ export async function findFoodByBarcode(barcode: string) {
   console.log(`[FOOD SERVICE] Looking up barcode: "${barcode}"`);
   console.log(`  Region: ${env.fatsecretRegion}`);
 
-  const token = await getFatSecretAccessToken();
+  const token = await getFatSecretAccessToken("barcode");
 
   const url = new URL(
     "https://platform.fatsecret.com/rest/food/barcode/find-by-id/v2"
@@ -43,6 +43,69 @@ export async function findFoodByBarcode(barcode: string) {
     throw new HttpError(
       response.status,
       `FatSecret barcode lookup failed: ${raw}`
+    );
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    console.error(
+      "[FOOD SERVICE] ❌ Failed to parse food response as JSON:",
+      raw
+    );
+    throw new HttpError(502, "Invalid food response from FatSecret");
+  }
+
+  console.log("[FOOD SERVICE] ✅ Successfully parsed food data");
+  console.log(`  Response keys:`, Object.keys(parsed as object));
+
+  return parsed;
+}
+
+export async function findFoodByName(name: string) {
+  const trimmed = name?.trim();
+  if (!trimmed) {
+    throw new HttpError(400, "Food name is required");
+  }
+
+  console.log(`[FOOD SERVICE] Looking up food name: "${trimmed}"`);
+  console.log(`  Region: ${env.fatsecretRegion}`);
+
+  const token = await getFatSecretAccessToken("premier");
+
+  const url = new URL("https://platform.fatsecret.com/rest/foods/search/v5");
+  url.searchParams.set("search_expression", trimmed);
+  url.searchParams.set("format", "json");
+  url.searchParams.set("region", env.fatsecretRegion);
+  url.searchParams.set("flag_default_serving", "true");
+
+  console.log(`[FOOD SERVICE] Fetching: ${url.toString()}`);
+
+  let response: globalThis.Response;
+  try {
+    response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (err) {
+    console.error(
+      "[FOOD SERVICE] ❌ Network error reaching FatSecret food endpoint:",
+      err
+    );
+    throw new HttpError(502, "Could not reach FatSecret food service");
+  }
+
+  const raw = await response.text();
+  console.log(`[FOOD SERVICE] Response status: ${response.status}`);
+
+  if (!response.ok) {
+    console.error(`[FOOD SERVICE] ❌ Lookup failed (${response.status}):`, raw);
+    throw new HttpError(
+      response.status,
+      `FatSecret food name lookup failed: ${raw}`
     );
   }
 

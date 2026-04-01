@@ -2,6 +2,7 @@ import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import barcodeRoutes from "./routes/barcodeRoutes.ts";
+import searchRoutes from "./routes/searchRoutes.ts";
 import { HttpError } from "./utils/httpError.ts";
 
 export const app = express();
@@ -30,6 +31,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/barcodes", barcodeRoutes);
+app.use("/api/food", searchRoutes);
 
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (error instanceof HttpError) {

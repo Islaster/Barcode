@@ -1,13 +1,23 @@
 import { createContext, useContext, useState, useMemo, useEffect } from "react";
-import type { FoodObject, NutritionApi } from "../constants/nutritionData";
+import type {
+  BarcodeFoodData,
+  FoodObject,
+  NutritionApi,
+} from "../constants/nutritionData";
 import { debug } from "../utils/debug";
+import type { SearchApi, SearchFoodData } from "../constants/SearchData";
+
+type PageStatusValue = {
+  current: string;
+  back: string;
+};
 
 type NutritionContextValue = {
   barcode: string;
   setBarcode: React.Dispatch<React.SetStateAction<string>>;
-  productData: NutritionApi | undefined;
+  productData: NutritionApi | undefined | SearchApi;
   setProductData: React.Dispatch<
-    React.SetStateAction<NutritionApi | undefined>
+    React.SetStateAction<NutritionApi | undefined | SearchApi>
   >;
   tableItems: FoodObject[];
   setTableItems: React.Dispatch<React.SetStateAction<FoodObject[]>>;
@@ -17,18 +27,31 @@ type NutritionContextValue = {
   setScannerOn: React.Dispatch<React.SetStateAction<boolean>>;
   tableOn: boolean;
   setTableOn: React.Dispatch<React.SetStateAction<boolean>>;
+  pageStatus: PageStatusValue;
+  setPageStatus: React.Dispatch<React.SetStateAction<PageStatusValue>>;
+  searchOn: boolean;
+  setSearchOn: React.Dispatch<React.SetStateAction<boolean>>;
+  setServingIndex: React.Dispatch<React.SetStateAction<number>>;
+  setSelectedFoodIndex: React.Dispatch<React.SetStateAction<number>>;
 };
 
 const NutritionContext = createContext<NutritionContextValue | null>(null);
 
 export function NutritionProvider({ children }: { children: React.ReactNode }) {
   const [barcode, setBarcode] = useState("");
-  const [productData, setProductData] = useState<NutritionApi | undefined>(
-    undefined
-  );
+  const [productData, setProductData] = useState<
+    NutritionApi | SearchApi | undefined
+  >(undefined);
   const [loading, setLoading] = useState<boolean>(false);
+  const [servingIndex, setServingIndex] = useState<number>(0);
   const [scannerOn, setScannerOn] = useState<boolean>(false);
+  const [searchOn, setSearchOn] = useState<boolean>(false);
   const [tableOn, setTableOn] = useState<boolean>(true);
+  const [selectedFoodIndex, setSelectedFoodIndex] = useState<number>(0);
+  const [pageStatus, setPageStatus] = useState<PageStatusValue>({
+    current: "home",
+    back: "",
+  });
   const today = new Date().toLocaleDateString();
 
   // Initialize tableItems from localStorage safely
@@ -72,22 +95,33 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Validate the entire data path
-    const food = productData?.data?.food;
-    if (!food) {
-      debug.error("context", "Missing 'data.food' in productData", productData);
+    let food: BarcodeFoodData | SearchFoodData[];
+    if ("foods_search" in productData.data) {
+      food = productData.data.foods_search.results.food;
+    } else if ("food" in productData.data) {
+      food = productData.data.food;
+    } else {
+      console.error(
+        "data isnt compatible check.\nHere is what's been returned: ",
+        productData
+      );
       return;
     }
 
-    const servings = food.servings?.serving;
+    const servings = Array.isArray(food)
+      ? food[selectedFoodIndex].servings?.serving
+      : food.servings.serving;
     if (!servings || !Array.isArray(servings) || servings.length === 0) {
       debug.error("context", "Missing or empty 'servings.serving' array", food);
       return;
     }
-    const name = food.food_name;
-    const protein = servings[0].protein;
-    const calories = servings[0].calories;
-    const fats = servings[0].fat;
-    const sodium = servings[0].sodium;
+    const name = Array.isArray(food)
+      ? food[selectedFoodIndex].food_name
+      : food.food_name;
+    const protein = servings[servingIndex].protein;
+    const calories = servings[servingIndex].calories;
+    const fats = servings[servingIndex].fat;
+    const sodium = servings[servingIndex].sodium;
 
     debug.log("context", "Extracted values:", { name, protein, calories });
 
@@ -145,7 +179,7 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       );
       return updated;
     });
-  }, [productData]);
+  }, [productData, servingIndex, selectedFoodIndex]);
 
   // Sync tableItems to localStorage
   useEffect(() => {
@@ -176,8 +210,14 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       setTableOn,
       scannerOn,
       setScannerOn,
+      pageStatus,
+      setPageStatus,
+      searchOn,
+      setSearchOn,
+      setServingIndex,
+      setSelectedFoodIndex,
     }),
-    [barcode, productData, tableOn, scannerOn, tableItems]
+    [barcode, productData, tableOn, scannerOn, tableItems, pageStatus]
   );
 
   return (

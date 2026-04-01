@@ -1,0 +1,134 @@
+/* ------------------------------------------------------------------ */
+/*  Container                                                          */
+/* ------------------------------------------------------------------ */
+
+.food-search {
+  max-width: 720px;
+  margin: 2rem auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 0 1rem;
+}
+
+.food-search__heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Search form                                                        */
+/* ------------------------------------------------------------------ */
+
+.food-search__form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.food-search__input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+}
+
+.food-search__input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.food-search__button {
+  padding: 0.6rem 1.25rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.15s ease;
+}
+
+.food-search__button:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.food-search__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------ */
+/*  States                                                             */
+/* ------------------------------------------------------------------ */
+
+.food-search__error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.food-search__loading {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem 0;
+}
+
+.food-search__empty {
+  text-align: center;
+  color: #9ca3af;
+  padding: 2rem 0;
+  font-size: 0.95rem;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Simple list (no images)                                            */
+/* ------------------------------------------------------------------ */
+
+.food-search__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.food-search__list-item {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.food-search__list-item:hover,
+.food-search__list-item:focus-visible {
+  background: #f9fafb;
+  outline: none;
+}
+
+.food-search__list-item-description {
+  color: #6b7280;
+  margin-left: 0.5rem;
+}
+
+.food-search__servings-expander {
+  margin-top: 0.5rem;
+  padding: 0;
+}
+
+.food-search__servings-select {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  padding: inherit;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+}

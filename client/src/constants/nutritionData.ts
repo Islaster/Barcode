@@ -11,7 +11,7 @@ export const fields = [
   "image_url",
 ];
 
-type ServingData = {
+export type ServingData = {
   calcium: string;
   calories: string;
   carbohydrate: string;
@@ -38,7 +38,7 @@ type ServingData = {
   vitamin_d: string;
 };
 
-type FoodData = {
+export type BarcodeFoodData = {
   brand_name: string;
   food_id: string;
   food_name: string;
@@ -49,7 +49,7 @@ type FoodData = {
 
 export type NutritionApi = {
   barcode: string;
-  data: { food: FoodData };
+  data: { food: BarcodeFoodData };
   source: string;
 };
 

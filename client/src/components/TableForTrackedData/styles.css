@@ -61,3 +61,58 @@
 .nutrition-table tbody tr:hover {
   background: #f9fafb;
 }
+
+.add-item-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.add-item-modal {
+  width: min(420px, 90%);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.add-item-modal h3 {
+  margin: 0 0 8px;
+}
+
+.add-item-modal p {
+  margin: 0 0 20px;
+  color: #6b7280;
+}
+
+.add-item-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.add-item-option-btn,
+.add-item-cancel-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.add-item-option-btn {
+  background: #111827;
+  color: white;
+}
+
+.add-item-cancel-btn {
+  background: #e5e7eb;
+  color: #111827;
+}
