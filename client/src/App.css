@@ -15,3 +15,249 @@
 .content > * {
   width: 100%;
 }
+
+/* ===== Global Responsive Styles ===== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+main {
+  width: 100%;
+  padding: 0 8px;
+}
+
+h1 {
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  padding: 0 8px;
+}
+
+.container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+
+.content {
+  width: 100%;
+}
+
+/* ===== Nutrition Table Responsive ===== */
+
+.nutrition-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-size: 1rem;
+}
+
+.nutrition-table th,
+.nutrition-table td {
+  padding: 10px 12px;
+  text-align: left;
+  word-wrap: break-word;
+}
+
+/* Stack table on small screens */
+@media screen and (max-width: 600px) {
+  .nutrition-table,
+  .nutrition-table thead,
+  .nutrition-table tbody,
+  .nutrition-table tfoot,
+  .nutrition-table th,
+  .nutrition-table td,
+  .nutrition-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .nutrition-table thead {
+    display: none; /* Hide header row — we'll use data labels instead */
+  }
+
+  .nutrition-table tr {
+    margin-bottom: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background: #fafafa;
+  }
+
+  .nutrition-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    border: none;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+  }
+
+  .nutrition-table td:last-child {
+    border-bottom: none;
+  }
+
+  /* Data labels for each cell */
+  .nutrition-table tbody td:nth-child(1)::before {
+    content: "Item: ";
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .nutrition-table tbody td:nth-child(2)::before {
+    content: "Calories: ";
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .nutrition-table tbody td:nth-child(3)::before {
+    content: "Protein: ";
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .nutrition-table tbody td:nth-child(4)::before {
+    content: "Fats: ";
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .nutrition-table tbody td:nth-child(5)::before {
+    content: "Sodium: ";
+    font-weight: 700;
+    margin-right: 8px;
+  }
+
+  /* Totals footer row styling */
+  .nutrition-table tfoot tr {
+    background: #e8f5e9;
+    border: 2px solid #4caf50;
+  }
+
+  .nutrition-table tfoot td:nth-child(1)::before {
+    content: "";
+  }
+  .nutrition-table tfoot td:nth-child(2)::before {
+    content: "Calories: ";
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .nutrition-table tfoot td:nth-child(3)::before {
+    content: "Protein: ";
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .nutrition-table tfoot td:nth-child(4)::before {
+    content: "Fats: ";
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .nutrition-table tfoot td:nth-child(5)::before {
+    content: "Sodium: ";
+    font-weight: 700;
+    margin-right: 8px;
+  }
+}
+
+/* ===== Barcode Scanner Responsive ===== */
+
+#reader {
+  width: 100% !important;
+  max-width: 420px !important;
+  min-height: 260px !important;
+}
+
+@media screen and (max-width: 480px) {
+  #reader {
+    max-width: 100% !important;
+    min-height: 220px !important;
+    border-radius: 8px !important;
+  }
+}
+
+/* ===== Add Item Modal Responsive ===== */
+
+.add-item-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.add-item-option-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.add-item-cancel-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+@media screen and (min-width: 601px) {
+  .add-item-modal-actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .add-item-option-btn {
+    width: auto;
+    min-width: 180px;
+  }
+
+  .add-item-cancel-btn {
+    width: auto;
+  }
+}
+
+/* ===== Food Search Responsive ===== */
+
+.food-search__servings-select {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 6px;
+}
+
+@media screen and (max-width: 600px) {
+  .food-search__list-item {
+    padding: 10px 8px;
+    font-size: 0.95rem;
+  }
+
+  .food-search__servings-expander {
+    padding: 8px;
+  }
+
+  .food-search__servings-select {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+}
+
+/* ===== General Button Touch Targets ===== */
+
+@media screen and (max-width: 600px) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+    font-size: 1rem;
+  }
+
+  input[type="text"],
+  input[type="search"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+  }
+}
