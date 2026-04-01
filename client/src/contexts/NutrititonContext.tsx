@@ -67,6 +67,10 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
 
       const parsed = JSON.parse(dailyLog);
       debug.log("storage", "Parsed dailyLog:", parsed);
+      if (parsed[0].date !== today) {
+        localStorage.removeItem("dailyLog");
+        return [];
+      }
 
       if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.tableItems) {
         debug.log(
