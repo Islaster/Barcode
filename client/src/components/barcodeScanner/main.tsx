@@ -8,6 +8,31 @@ import { useNutritionContext } from "../../contexts/NutrititonContext";
 import { fetchProductByBarcode } from "../../hooks/useBarcode";
 import { debug } from "../../utils/debug";
 
+type ExtendedMediaTrackConstraintSet = MediaTrackConstraintSet & {
+  focusMode?: ConstrainDOMString;
+  focusDistance?: ConstrainDouble;
+  zoom?: ConstrainDouble;
+  torch?: ConstrainBoolean;
+};
+
+type ExtendedMediaTrackConstraints = MediaTrackConstraints & {
+  advanced?: ExtendedMediaTrackConstraintSet[];
+};
+
+type ExtendedMediaTrackCapabilities = MediaTrackCapabilities & {
+  focusMode?: string[];
+  focusDistance?: { min: number; max: number; step?: number };
+  torch?: boolean;
+  zoom?: { min: number; max: number; step?: number };
+};
+
+type ExtendedMediaTrackSettings = MediaTrackSettings & {
+  focusMode?: string;
+  focusDistance?: number;
+  torch?: boolean;
+  zoom?: number;
+};
+
 export default function BarcodeScanner() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -92,10 +117,26 @@ export default function BarcodeScanner() {
           () => {}
         );
 
-        const settings = scanner.getRunningTrackSettings();
-        const caps = scanner.getRunningTrackCapabilities();
+        const settings =
+          scanner.getRunningTrackSettings() as ExtendedMediaTrackSettings;
+        const caps =
+          scanner.getRunningTrackCapabilities() as ExtendedMediaTrackCapabilities;
         console.log("settings: ", settings);
         console.log("caps: ", caps);
+
+        const constraints: ExtendedMediaTrackConstraints = {
+          advanced: [
+            { focusMode: "manual" },
+            { focusDistance: { min: 0, max: 1.6276918649673462 } },
+            { zoom: 2 },
+          ],
+        };
+
+        if (caps.focusMode?.includes("manual")) {
+          await scanner.applyVideoConstraints(
+            constraints as MediaTrackConstraints
+          );
+        }
 
         setIsRunning(true);
         debug.log("scanner", "Scanner started successfully ✅");
