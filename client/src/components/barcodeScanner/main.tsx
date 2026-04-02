@@ -124,18 +124,14 @@ export default function BarcodeScanner() {
         console.log("settings: ", settings);
         console.log("caps: ", caps);
 
-        const constraints: ExtendedMediaTrackConstraints = {
-          advanced: [
-            { focusMode: "manual" },
-            { focusDistance: { min: 0, max: 1.6276918649673462 } },
-            { zoom: 2 },
-          ],
-        };
-
-        if (caps.focusMode?.includes("manual")) {
-          await scanner.applyVideoConstraints(
-            constraints as MediaTrackConstraints
-          );
+        if (caps.zoom) {
+          await scanner.applyVideoConstraints({
+            advanced: [
+              {
+                zoom: Math.min(2, caps.zoom.max),
+              } as ExtendedMediaTrackConstraintSet,
+            ],
+          } as ExtendedMediaTrackConstraints);
         }
         console.log("settings after focus change: ", settings);
         setIsRunning(true);
