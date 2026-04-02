@@ -88,7 +88,15 @@ export default function BarcodeScanner() {
 
         await scanner.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 280, height: 140 } },
+          {
+            fps: 10,
+            qrbox: { width: 280, height: 140 },
+            videoConstraints: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
+          },
 
           async (decodedText, decodedResult: Html5QrcodeResult) => {
             const format = decodedResult.result.format?.format;
@@ -117,23 +125,6 @@ export default function BarcodeScanner() {
           () => {}
         );
 
-        const settings =
-          scanner.getRunningTrackSettings() as ExtendedMediaTrackSettings;
-        const caps =
-          scanner.getRunningTrackCapabilities() as ExtendedMediaTrackCapabilities;
-        console.log("settings: ", settings);
-        console.log("caps: ", caps);
-
-        if (caps.zoom) {
-          await scanner.applyVideoConstraints({
-            advanced: [
-              {
-                zoom: Math.min(2, caps.zoom.max),
-              } as ExtendedMediaTrackConstraintSet,
-            ],
-          } as ExtendedMediaTrackConstraints);
-        }
-        console.log("settings after focus change: ", settings);
         setIsRunning(true);
         debug.log("scanner", "Scanner started successfully ✅");
       } catch (err) {
