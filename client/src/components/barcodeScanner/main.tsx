@@ -8,31 +8,6 @@ import { useNutritionContext } from "../../contexts/NutrititonContext";
 import { fetchProductByBarcode } from "../../hooks/useBarcode";
 import { debug } from "../../utils/debug";
 
-type ExtendedMediaTrackConstraintSet = MediaTrackConstraintSet & {
-  focusMode?: ConstrainDOMString;
-  focusDistance?: ConstrainDouble;
-  zoom?: ConstrainDouble;
-  torch?: ConstrainBoolean;
-};
-
-type ExtendedMediaTrackConstraints = MediaTrackConstraints & {
-  advanced?: ExtendedMediaTrackConstraintSet[];
-};
-
-type ExtendedMediaTrackCapabilities = MediaTrackCapabilities & {
-  focusMode?: string[];
-  focusDistance?: { min: number; max: number; step?: number };
-  torch?: boolean;
-  zoom?: { min: number; max: number; step?: number };
-};
-
-type ExtendedMediaTrackSettings = MediaTrackSettings & {
-  focusMode?: string;
-  focusDistance?: number;
-  torch?: boolean;
-  zoom?: number;
-};
-
 export default function BarcodeScanner() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isRunning, setIsRunning] = useState(false);
