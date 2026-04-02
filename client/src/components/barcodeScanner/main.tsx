@@ -4,12 +4,11 @@ import {
   Html5QrcodeSupportedFormats,
   type Html5QrcodeResult,
 } from "html5-qrcode";
-import { useNutritionContext } from "../contexts/NutrititonContext";
-import { fields } from "../constants/nutritionData";
-import { debug } from "../utils/debug";
+import { useNutritionContext } from "../../contexts/NutrititonContext";
+import { fetchProductByBarcode } from "../../hooks/useBarcode";
+import { debug } from "../../utils/debug";
 
 export default function BarcodeScanner() {
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const { setBarcode, setLoading, setProductData, setScannerOn, setTableOn } =
@@ -32,19 +31,6 @@ export default function BarcodeScanner() {
       return;
     }
     debug.log("scanner", "Component mounted");
-    debug.log("scanner", `VITE_SERVER_URL: ${serverUrl}`);
-
-    if (!serverUrl) {
-      debug.error(
-        "scanner",
-        "VITE_SERVER_URL is undefined! API calls will fail."
-      );
-    } else if (!serverUrl.startsWith("http")) {
-      debug.error(
-        "scanner",
-        `VITE_SERVER_URL missing protocol: "${serverUrl}"`
-      );
-    }
 
     const readerEl = document.getElementById("reader");
     if (!readerEl) {
@@ -78,6 +64,7 @@ export default function BarcodeScanner() {
         await scanner.start(
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 280, height: 140 } },
+
           async (decodedText, decodedResult: Html5QrcodeResult) => {
             const format = decodedResult.result.format?.format;
             debug.log(
@@ -105,6 +92,11 @@ export default function BarcodeScanner() {
           () => {}
         );
 
+        const settings = scanner.getRunningTrackSettings();
+        const caps = scanner.getRunningTrackCapabilities();
+        console.log("settings: ", settings);
+        console.log("caps: ", caps);
+
         setIsRunning(true);
         debug.log("scanner", "Scanner started successfully ✅");
       } catch (err) {
@@ -117,6 +109,7 @@ export default function BarcodeScanner() {
         }
       }
     })();
+
     return () => {
       debug.log("scanner", "Component unmounting — stopping scanner");
       if (scannerRef.current?.isScanning) {
@@ -126,69 +119,6 @@ export default function BarcodeScanner() {
       }
     };
   }, []);
-
-  async function fetchProductByBarcode(barcode: string): Promise<any> {
-    const url = `${serverUrl}/api/barcodes/${barcode}`;
-    debug.log("fetch", `Fetching: ${url}`);
-    debug.log("fetch", `Fields: ${fields.join(",")}`);
-
-    try {
-      const res = await fetch(url);
-
-      debug.log("fetch", `Response status: ${res.status} ${res.statusText}`);
-      debug.log("fetch", `Response headers:`, {
-        contentType: res.headers.get("content-type"),
-        cors: res.headers.get("access-control-allow-origin"),
-      });
-
-      if (!res.ok) {
-        const errorBody = await res.text();
-        debug.error("fetch", `Server responded with ${res.status}`, errorBody);
-        throw new Error(
-          `Failed to fetch product: ${res.status} — ${errorBody}`
-        );
-      }
-
-      const data = await res.json();
-      debug.log("fetch", "Parsed response data:", data);
-
-      // Validate expected structure
-      if (!data?.data) {
-        debug.error("fetch", "Response missing 'data' property", data);
-      } else if (!data.data.food) {
-        debug.error(
-          "fetch",
-          "Response missing 'data.food' property",
-          data.data
-        );
-      } else if (!data.data.food.servings?.serving?.[0]) {
-        debug.error("fetch", "Response missing serving data", data.data.food);
-      } else {
-        debug.log("fetch", "Response structure validated ✅", {
-          name: data.data.food.food_name,
-          protein: data.data.food.servings.serving[0].protein,
-          calories: data.data.food.servings.serving[0].calories,
-        });
-      }
-
-      return data;
-    } catch (err) {
-      if (err instanceof TypeError && err.message === "Failed to fetch") {
-        debug.error(
-          "fetch",
-          "Network error — server may be down or CORS blocked",
-          {
-            url,
-            serverUrl,
-            hint: "Check if Railway server is running and CORS is configured",
-          }
-        );
-      } else {
-        debug.error("fetch", "Fetch failed", err);
-      }
-      throw err;
-    }
-  }
 
   const handleDetected = async (detectedBarcode: string) => {
     debug.log("scanner", `Barcode detected: ${detectedBarcode}`);

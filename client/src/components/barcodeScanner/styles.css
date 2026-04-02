@@ -1,0 +1,13 @@
+#reader {
+  width: 100% !important;
+  max-width: 420px !important;
+  min-height: 260px !important;
+}
+
+@media screen and (max-width: 480px) {
+  #reader {
+    max-width: 100% !important;
+    min-height: 220px !important;
+    border-radius: 8px !important;
+  }
+}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNutritionContext } from "../../contexts/NutrititonContext";
 import "./styles.css";
 import type { SearchApi, SearchFoodData } from "../../constants/SearchData";
+import { fetchProductBySearch } from "../../hooks/useSearch";
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -43,11 +44,7 @@ export default function FoodSearch() {
     let response: Response;
 
     try {
-      const url = `${
-        import.meta.env.VITE_SERVER_URL
-      }/api/food/search?name=${encodeURIComponent(trimmed)}`;
-      console.log(`[FOOD SEARCH UI] Fetching: ${url}`);
-      response = await fetch(url);
+      response = await fetchProductBySearch(searchTerm);
     } catch (err) {
       console.error("[FOOD SEARCH UI] ❌ Network error:", err);
       setError("Could not reach the server. Please check your connection.");
