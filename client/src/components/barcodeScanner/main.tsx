@@ -137,7 +137,7 @@ export default function BarcodeScanner() {
             constraints as MediaTrackConstraints
           );
         }
-
+        console.log("settings after focus change: ", settings);
         setIsRunning(true);
         debug.log("scanner", "Scanner started successfully ✅");
       } catch (err) {
