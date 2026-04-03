@@ -23,21 +23,20 @@ export default function BarcodeScanner() {
     []
   );
 
-  const hints = useMemo(
-    () =>
-      new Map([
-        [
-          DecodeHintType.POSSIBLE_FORMATS,
-          [
-            BarcodeFormat.UPC_A,
-            BarcodeFormat.UPC_E,
-            BarcodeFormat.EAN_8,
-            BarcodeFormat.EAN_13,
-          ],
-        ],
-      ]),
-    []
-  );
+  const hints = useMemo(() => {
+    const hintMap = new Map<DecodeHintType, unknown>();
+
+    hintMap.set(DecodeHintType.POSSIBLE_FORMATS, [
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.UPC_E,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.EAN_13,
+    ]);
+
+    hintMap.set(DecodeHintType.TRY_HARDER, true);
+
+    return hintMap;
+  }, []);
 
   const handleDetected = async (detectedBarcode: string) => {
     debug.log("scanner", `Barcode detected: ${detectedBarcode}`);
@@ -62,12 +61,13 @@ export default function BarcodeScanner() {
   const { ref } = useZxing({
     paused: !isRunning,
     hints,
-    timeBetweenDecodingAttempts: 100,
+    timeBetweenDecodingAttempts: 75,
     constraints: {
       video: {
         facingMode: { ideal: "environment" },
         width: { ideal: 1920 },
         height: { ideal: 1080 },
+        frameRate: { ideal: 30 },
       },
       audio: false,
     },
@@ -125,6 +125,7 @@ export default function BarcodeScanner() {
     }
 
     debug.log("scanner", "Starting scanner...");
+    console.log(ref);
     setIsRunning(true);
     debug.log("scanner", "Scanner started successfully ✅");
 
