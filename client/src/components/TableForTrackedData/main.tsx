@@ -128,9 +128,9 @@ export default function NutritionTable() {
                   <tr key={index}>
                     <td>{item.name}</td>
                     <td>{calories ?? 0}</td>
-                    <td>{protein ?? 0}</td>
+                    <td>{protein ?? 0}g</td>
                     <td>{fats ?? 0}</td>
-                    <td>{sodium ?? 0}</td>
+                    <td>{sodium ?? 0}mg</td>
                   </tr>
                 );
               })
@@ -182,6 +182,7 @@ export default function NutritionTable() {
                       (acc, currentValue) => acc + currentValue,
                       0
                     )}
+                    mg
                   </strong>
                 </td>
               </tr>
