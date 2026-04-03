@@ -1,127 +1,43 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  Html5Qrcode,
-  Html5QrcodeSupportedFormats,
-  type Html5QrcodeResult,
-} from "html5-qrcode";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useZxing } from "react-zxing";
+import { BarcodeFormat, DecodeHintType, type Result } from "@zxing/library";
 import { useNutritionContext } from "../../contexts/NutrititonContext";
 import { fetchProductByBarcode } from "../../hooks/useBarcode";
 import { debug } from "../../utils/debug";
 
 export default function BarcodeScanner() {
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const isHandlingRef = useRef(false);
   const [isRunning, setIsRunning] = useState(false);
+
   const { setBarcode, setLoading, setProductData, setScannerOn, setTableOn } =
     useNutritionContext();
-  const allowedFormats = new Set([
-    Html5QrcodeSupportedFormats.UPC_A,
-    Html5QrcodeSupportedFormats.UPC_E,
-    Html5QrcodeSupportedFormats.EAN_8,
-    Html5QrcodeSupportedFormats.EAN_13,
-  ]);
 
-  // Validate environment on mount
-  useEffect(() => {
-    // Guard against double mount from React Strict Mode
-    if (scannerRef.current) {
-      debug.warn(
-        "scanner",
-        "Scanner already initialized — skipping duplicate mount"
-      );
-      return;
-    }
-    debug.log("scanner", "Component mounted");
+  const allowedFormats = useMemo(
+    () =>
+      new Set<BarcodeFormat>([
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.EAN_13,
+      ]),
+    []
+  );
 
-    const readerEl = document.getElementById("reader");
-    if (!readerEl) {
-      debug.error("scanner", "DOM element #reader not found on mount");
-    } else {
-      debug.log("scanner", "#reader element found", {
-        width: readerEl.offsetWidth,
-        height: readerEl.offsetHeight,
-      });
-    }
-    (async () => {
-      if (isRunning) {
-        debug.warn("scanner", "startScanner called but already running");
-        return;
-      }
-
-      debug.log("scanner", "Starting scanner...");
-
-      try {
-        const scanner = new Html5Qrcode("reader", {
-          verbose: false,
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.EAN_13,
+  const hints = useMemo(
+    () =>
+      new Map([
+        [
+          DecodeHintType.POSSIBLE_FORMATS,
+          [
+            BarcodeFormat.UPC_A,
+            BarcodeFormat.UPC_E,
+            BarcodeFormat.EAN_8,
+            BarcodeFormat.EAN_13,
           ],
-        });
-        scannerRef.current = scanner;
-
-        await scanner.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 280, height: 140 },
-            videoConstraints: {
-              facingMode: { ideal: "environment" },
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
-            },
-          },
-
-          async (decodedText, decodedResult: Html5QrcodeResult) => {
-            const format = decodedResult.result.format?.format;
-            debug.log(
-              "scanner",
-              `Scan result — format: ${format}, text: ${decodedText}`
-            );
-
-            if (format === undefined) {
-              debug.warn("scanner", "No barcode format found in result");
-              return;
-            }
-            if (!allowedFormats.has(format)) {
-              debug.warn("scanner", `Unsupported format: ${format}`);
-              return;
-            }
-
-            if (scannerRef.current?.isScanning) {
-              await scannerRef.current.stop();
-              debug.log("scanner", "Scanner stopped after successful scan");
-            }
-
-            setIsRunning(false);
-            handleDetected(decodedText);
-          },
-          () => {}
-        );
-
-        setIsRunning(true);
-        debug.log("scanner", "Scanner started successfully ✅");
-      } catch (err) {
-        debug.error("scanner", "Failed to start scanner", err);
-        if (err instanceof Error && err.message.includes("Permission")) {
-          debug.error(
-            "scanner",
-            "Camera permission denied — user must allow camera access"
-          );
-        }
-      }
-    })();
-
-    return () => {
-      debug.log("scanner", "Component unmounting — stopping scanner");
-      if (scannerRef.current?.isScanning) {
-        scannerRef.current.stop().catch((err) => {
-          debug.error("scanner", "Failed to stop scanner on unmount", err);
-        });
-      }
-    };
-  }, []);
+        ],
+      ]),
+    []
+  );
 
   const handleDetected = async (detectedBarcode: string) => {
     debug.log("scanner", `Barcode detected: ${detectedBarcode}`);
@@ -139,8 +55,84 @@ export default function BarcodeScanner() {
       setProductData(undefined);
     } finally {
       setLoading(false);
+      isHandlingRef.current = false;
     }
   };
+
+  const { ref } = useZxing({
+    paused: !isRunning,
+    hints,
+    timeBetweenDecodingAttempts: 100,
+    constraints: {
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      },
+      audio: false,
+    },
+    onDecodeResult(result: Result) {
+      if (isHandlingRef.current) return;
+
+      const format = result.getBarcodeFormat();
+      const decodedText = result.getText();
+
+      debug.log(
+        "scanner",
+        `Scan result — format: ${String(format)}, text: ${decodedText}`
+      );
+
+      if (format === undefined) {
+        debug.warn("scanner", "No barcode format found in result");
+        return;
+      }
+
+      if (!allowedFormats.has(format)) {
+        debug.warn("scanner", `Unsupported format: ${String(format)}`);
+        return;
+      }
+
+      isHandlingRef.current = true;
+      setIsRunning(false);
+      debug.log("scanner", "Scanner stopped after successful scan");
+
+      void handleDetected(decodedText);
+    },
+    onDecodeError() {},
+    onError(error) {
+      debug.error("scanner", "Failed to start scanner", error);
+
+      if (error instanceof Error && error.message.includes("Permission")) {
+        debug.error(
+          "scanner",
+          "Camera permission denied — user must allow camera access"
+        );
+      }
+    },
+  });
+
+  useEffect(() => {
+    debug.log("scanner", "Component mounted");
+
+    const readerEl = document.getElementById("reader");
+    if (!readerEl) {
+      debug.error("scanner", "DOM element #reader not found on mount");
+    } else {
+      debug.log("scanner", "#reader element found", {
+        width: readerEl.offsetWidth,
+        height: readerEl.offsetHeight,
+      });
+    }
+
+    debug.log("scanner", "Starting scanner...");
+    setIsRunning(true);
+    debug.log("scanner", "Scanner started successfully ✅");
+
+    return () => {
+      debug.log("scanner", "Component unmounting — stopping scanner");
+      setIsRunning(false);
+    };
+  }, []);
 
   return (
     <div
@@ -156,12 +148,24 @@ export default function BarcodeScanner() {
         style={{
           width: "100%",
           maxWidth: 420,
-          minHeight: 320,
+          height: 320,
           border: "1px solid #ccc",
           borderRadius: 12,
           overflow: "hidden",
         }}
-      />
+      >
+        <video
+          ref={ref}
+          style={{
+            width: "100%",
+            height: "320px",
+            objectFit: "cover",
+            display: "block",
+          }}
+          muted
+          playsInline
+        />
+      </div>
     </div>
   );
 }
