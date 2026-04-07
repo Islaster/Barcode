@@ -247,6 +247,36 @@
     font-weight: 700;
     margin-right: 8px;
   }
+  .nutrition-table tbody td:nth-child(6) {
+    border-bottom: none;
+    justify-content: flex-end;
+  }
+
+  .nutrition-table tfoot td:nth-child(6) {
+    display: none;
+  }
+}
+
+.delete-item-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #ef4444;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  flex-shrink: 0;
+}
+
+.delete-item-btn:hover {
+  background: #dc2626;
+}
+
+.delete-item-btn:active {
+  background: #b91c1c;
 }
 
 @media screen and (min-width: 601px) {

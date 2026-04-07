@@ -5,13 +5,14 @@ import { debug } from "../../utils/debug";
 
 export default function NutritionTable() {
   const [showAddItemModal, setShowAddItemModal] = useState(false);
-  const { tableItems, setTableOn, setScannerOn, setSearchOn } =
+  const { tableItems, setTableItems, setTableOn, setScannerOn, setSearchOn } =
     useNutritionContext();
+
   const caloriesItems: number[] = [];
   const proteinItems: number[] = [];
   const fatsItems: number[] = [];
   const sodiumItems: number[] = [];
-  console.log(tableItems);
+
   tableItems.forEach((item) => {
     caloriesItems.push(
       parseInt(item.data.filter((i) => i.title === "calories")[0].data)
@@ -28,9 +29,12 @@ export default function NutritionTable() {
     );
   });
 
-  const handleAddItemClick = () => {
-    setShowAddItemModal(true);
-  };
+  function handleDelete(index: number) {
+    setTableItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  const handleAddItemClick = () => setShowAddItemModal(true);
+  const closeModal = () => setShowAddItemModal(false);
 
   const handleSearchByBarcode = () => {
     debug.log("table", "Opening barcode scanner from Add Item modal");
@@ -46,10 +50,6 @@ export default function NutritionTable() {
     setSearchOn(true);
   };
 
-  const closeModal = () => {
-    setShowAddItemModal(false);
-  };
-
   return (
     <div className="nutrition-table-page">
       <div className="nutrition-table-card">
@@ -58,6 +58,7 @@ export default function NutritionTable() {
             Add Item
           </button>
         </div>
+
         {showAddItemModal && (
           <div className="add-item-modal-overlay" onClick={closeModal}>
             <div
@@ -66,7 +67,6 @@ export default function NutritionTable() {
             >
               <h3>Select how you want to add an item</h3>
               <p>Choose to search by name or scan a barcode.</p>
-
               <div className="add-item-modal-actions">
                 <button
                   className="add-item-option-btn"
@@ -74,7 +74,6 @@ export default function NutritionTable() {
                 >
                   Search by Name
                 </button>
-
                 <button
                   className="add-item-option-btn"
                   onClick={handleSearchByBarcode}
@@ -82,13 +81,13 @@ export default function NutritionTable() {
                   Scan Barcode
                 </button>
               </div>
-
               <button className="add-item-cancel-btn" onClick={closeModal}>
                 Cancel
               </button>
             </div>
           </div>
         )}
+
         <table className="nutrition-table">
           <thead>
             <tr>
@@ -97,6 +96,7 @@ export default function NutritionTable() {
               <th>Protein</th>
               <th>Fats</th>
               <th>Sodium</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -112,6 +112,7 @@ export default function NutritionTable() {
                 const sodium = item.data.find(
                   (i) => i.title === "sodium"
                 )?.data;
+
                 debug.log("table", `Row ${index}:`, {
                   name: item.name,
                   calories,
@@ -119,10 +120,8 @@ export default function NutritionTable() {
                   fats,
                   sodium,
                 });
-
-                if (!calories || !protein) {
+                if (!calories || !protein)
                   debug.error("table", `Row ${index} missing data`, item);
-                }
 
                 return (
                   <tr key={index}>
@@ -131,13 +130,38 @@ export default function NutritionTable() {
                     <td>{protein ?? 0}g</td>
                     <td>{fats ?? 0}</td>
                     <td>{sodium ?? 0}mg</td>
+                    <td>
+                      <button
+                        className="delete-item-btn"
+                        onClick={() => handleDelete(index)}
+                        aria-label={`Delete ${item.name}`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
                 <td
-                  colSpan={3}
+                  colSpan={6}
                   style={{ textAlign: "center", color: "#9ca3af" }}
                 >
                   No items yet — scan a barcode to add one
@@ -152,39 +176,18 @@ export default function NutritionTable() {
                   <strong>Total</strong>
                 </td>
                 <td>
-                  <strong>
-                    {caloriesItems.reduce(
-                      (acc, currentValue) => acc + currentValue,
-                      0
-                    )}
-                  </strong>
+                  <strong>{caloriesItems.reduce((a, b) => a + b, 0)}</strong>
                 </td>
                 <td>
-                  <strong>
-                    {proteinItems.reduce(
-                      (acc, currentValue) => acc + currentValue,
-                      0
-                    )}
-                    g
-                  </strong>
+                  <strong>{proteinItems.reduce((a, b) => a + b, 0)}g</strong>
                 </td>
                 <td>
-                  <strong>
-                    {fatsItems.reduce(
-                      (acc, currentValue) => acc + currentValue,
-                      0
-                    )}
-                  </strong>
+                  <strong>{fatsItems.reduce((a, b) => a + b, 0)}</strong>
                 </td>
                 <td>
-                  <strong>
-                    {sodiumItems.reduce(
-                      (acc, currentValue) => acc + currentValue,
-                      0
-                    )}
-                    mg
-                  </strong>
+                  <strong>{sodiumItems.reduce((a, b) => a + b, 0)}mg</strong>
                 </td>
+                <td></td>
               </tr>
             </tfoot>
           )}

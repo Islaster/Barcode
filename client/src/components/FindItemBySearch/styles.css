@@ -1,7 +1,3 @@
-/* ------------------------------------------------------------------ */
-/*  Container                                                          */
-/* ------------------------------------------------------------------ */
-
 .food-search {
   max-width: 720px;
   margin: 2rem auto;
@@ -14,10 +10,6 @@
   font-weight: 600;
   margin-bottom: 1rem;
 }
-
-/* ------------------------------------------------------------------ */
-/*  Search form                                                        */
-/* ------------------------------------------------------------------ */
 
 .food-search__form {
   display: flex;
@@ -60,10 +52,6 @@
   cursor: not-allowed;
 }
 
-/* ------------------------------------------------------------------ */
-/*  States                                                             */
-/* ------------------------------------------------------------------ */
-
 .food-search__error {
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -87,10 +75,6 @@
   font-size: 0.95rem;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Simple list (no images)                                            */
-/* ------------------------------------------------------------------ */
-
 .food-search__list {
   list-style: none;
   padding: 0;
@@ -98,7 +82,6 @@
 }
 
 .food-search__list-item {
-  padding: 0.6rem 0.75rem;
   border-bottom: 1px solid #f0f0f0;
   font-size: 0.95rem;
   cursor: pointer;
@@ -111,47 +94,224 @@
   outline: none;
 }
 
+.food-search__list-item--expanded {
+  background: #f9fafb;
+}
+
+.food-search__list-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+}
+
 .food-search__list-item-description {
   color: #6b7280;
   margin-left: 0.5rem;
 }
 
-.food-search__servings-expander {
-  margin-top: 0.5rem;
-  padding: 0;
+.food-search__chevron {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  margin-left: 0.75rem;
+  flex-shrink: 0;
 }
 
-.food-search__servings-select {
+/* ------------------------------------------------------------------ */
+/*  Expander                                                           */
+/* ------------------------------------------------------------------ */
+
+.food-search__expander {
+  border-top: 1px solid #f0f0f0;
+  padding: 0.5rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Serving size pills                                                 */
+/* ------------------------------------------------------------------ */
+
+.food-search__servings-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.food-search__servings-label {
   width: 100%;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  color: inherit;
-  padding: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin-bottom: 0.1rem;
+}
+
+.food-search__serving-option {
+  padding: 0.3rem 0.7rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: #374151;
   cursor: pointer;
-  outline: none;
-  appearance: none;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+  white-space: nowrap;
 }
-/*MOBILE STYLES */
-.food-search__servings-select {
-  width: 100%;
-  padding: 10px;
-  font-size: 1rem;
+
+.food-search__serving-option:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.food-search__serving-option--active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Amount pills                                                       */
+/* ------------------------------------------------------------------ */
+
+.food-search__amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.food-search__amounts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.food-search__amount-pill {
+  padding: 0.3rem 0.7rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.food-search__amount-pill:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.food-search__amount-pill--active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.food-search__amount-pill--custom {
+  border-style: dashed;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Custom tooltip                                                     */
+/* ------------------------------------------------------------------ */
+
+.food-search__custom-wrapper {
+  position: relative;
+}
+
+.food-search__custom-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.food-search__custom-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #e5e7eb;
+}
+
+.food-search__custom-input {
+  width: 72px;
+  height: 28px;
+  padding: 0 0.4rem;
+  border: 1px solid #e5e7eb;
   border-radius: 6px;
+  font-size: 0.85rem;
+  color: #111827;
+  outline: none;
+  -moz-appearance: textfield;
 }
+
+.food-search__custom-input::-webkit-inner-spin-button,
+.food-search__custom-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+.food-search__custom-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.food-search__custom-confirm {
+  height: 28px;
+  padding: 0 0.6rem;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.food-search__custom-confirm:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.food-search__custom-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Mobile                                                             */
+/* ------------------------------------------------------------------ */
 
 @media screen and (max-width: 600px) {
-  .food-search__list-item {
+  .food-search__list-item-header {
     padding: 10px 8px;
-    font-size: 0.95rem;
   }
 
-  .food-search__servings-expander {
-    padding: 8px;
-  }
-
-  .food-search__servings-select {
-    font-size: 0.9rem;
-    padding: 8px;
+  .food-search__serving-option,
+  .food-search__amount-pill {
+    font-size: 0.82rem;
+    padding: 0.3rem 0.6rem;
   }
 }

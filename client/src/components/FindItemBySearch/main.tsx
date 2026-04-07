@@ -4,197 +4,321 @@ import "./styles.css";
 import type { SearchApi, SearchFoodData } from "../../constants/SearchData";
 import { fetchProductBySearch } from "../../hooks/useSearch";
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+interface SearchState {
+  term: string;
+  results: SearchFoodData[];
+  searched: boolean;
+  loading: boolean;
+  error: string | null;
+  resApi: SearchApi | null;
+}
+
+interface ExpandedState {
+  idx: number;
+  servingIdx: number | null;
+  customInput: string;
+  showCustom: boolean;
+}
+
+const COMMON_AMOUNTS = [0.5, 1, 1.5, 2, 3];
+
+const initialSearchState: SearchState = {
+  term: "",
+  results: [],
+  searched: false,
+  loading: false,
+  error: null,
+  resApi: null,
+};
 
 export default function FoodSearch() {
   const {
     setLoading: setContextLoading,
-    setSelectedFoodIndex,
-    setProductData,
-    setServingIndex,
+    setSelectedFood,
     setSearchOn,
     setTableOn,
   } = useNutritionContext();
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState<SearchFoodData[]>([]);
-  const [searched, setSearched] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [resApi, setResApi] = useState<SearchApi | null>(null);
+  const [expanded, setExpanded] = useState<ExpandedState | null>(null);
+  const [search, setSearch] = useState<SearchState>(initialSearchState);
 
-  /* ---------------------- search handler ---------------------- */
+  const setSearchField = (fields: Partial<SearchState>) =>
+    setSearch((prev) => ({ ...prev, ...fields }));
 
-  async function handleSearch(e?: React.SubmitEvent) {
+  function toggleItem(idx: number) {
+    setExpanded((prev) =>
+      prev?.idx === idx
+        ? null
+        : { idx, servingIdx: null, customInput: "", showCustom: false }
+    );
+  }
+
+  function toggleServing(servingIdx: number) {
+    setExpanded((prev) =>
+      prev
+        ? prev.servingIdx === servingIdx
+          ? { ...prev, servingIdx: null, showCustom: false }
+          : { ...prev, servingIdx, showCustom: false }
+        : prev
+    );
+  }
+
+  function toggleCustom() {
+    setExpanded((prev) =>
+      prev ? { ...prev, showCustom: !prev.showCustom, customInput: "" } : prev
+    );
+  }
+
+  async function handleSearch(e?: React.FormEvent) {
     e?.preventDefault();
-
-    const trimmed = searchTerm.trim();
+    const trimmed = search.term.trim();
     if (!trimmed) return;
 
-    console.log(`[FOOD SEARCH UI] Search started: "${trimmed}"`);
-
-    setLoading(true);
+    setSearchField({
+      loading: true,
+      error: null,
+      results: [],
+      searched: false,
+    });
+    setExpanded(null);
     setContextLoading(true);
-    setError(null);
-    setResults([]);
-    setSearched(false);
 
     let response: Response;
-
     try {
-      response = await fetchProductBySearch(searchTerm);
+      response = await fetchProductBySearch(trimmed);
     } catch (err) {
       console.error("[FOOD SEARCH UI] ❌ Network error:", err);
-      setError("Could not reach the server. Please check your connection.");
-      setLoading(false);
+      setSearchField({
+        error: "Could not reach the server. Please check your connection.",
+        loading: false,
+      });
       setContextLoading(false);
       return;
     }
+
     let json: SearchApi;
     try {
       json = await response.json();
-      setResApi(json);
-      console.log(`[FOOD SEARCH UI] Response status: ${response.status}`);
-      console.log("[FOOD SEARCH UI] JSON response:", json);
     } catch (err) {
       console.error(err);
       return;
     }
 
     if (!response.ok) {
-      console.error(
-        `[FOOD SEARCH UI] ❌ Search failed (${response.status}):`,
-        json
-      );
-      setError(`Search failed (${response.status}). Please try again.`);
-      setLoading(false);
+      setSearchField({
+        error: `Search failed (${response.status}). Please try again.`,
+        loading: false,
+      });
       setContextLoading(false);
       return;
     }
-    const data = json.data.foods_search.results.food;
-    setResults(data);
-    console.log("results fixed: ", results);
-    setSearched(true);
-    setLoading(false);
-    console.log("loading: ", loading);
+
+    setSearchField({
+      results: json.data.foods_search.results.food,
+      resApi: json,
+      searched: true,
+      loading: false,
+    });
     setContextLoading(false);
   }
 
-  /* ---------------------- selection handler ------------------- */
-
-  function handleSelectResult(
+  function handleSelectAmount(
     item: SearchFoodData,
     idx: number,
-    servingIndex: number
+    servingIdx: number,
+    amount: number
   ) {
-    const response = resApi as SearchApi;
-    console.log(`[FOOD SEARCH UI] Result selected: "${item.food_name}"`);
-    setSelectedFoodIndex(idx);
-    setServingIndex(servingIndex);
-    setProductData(response);
+    setSelectedFood({
+      foodIndex: idx,
+      servingIndex: servingIdx,
+      amount,
+      data: search.resApi as SearchApi,
+    });
     setSearchOn(false);
     setTableOn(true);
   }
 
-  /* ---------------------- render ----------------------------- */
+  function handleCustomSubmit(
+    item: SearchFoodData,
+    idx: number,
+    servingIdx: number
+  ) {
+    const amount = parseFloat(expanded?.customInput ?? "");
+    if (isNaN(amount) || amount <= 0) return;
+    handleSelectAmount(item, idx, servingIdx, amount);
+  }
 
   return (
     <div className="food-search">
       <h2 className="food-search__heading">Food Search</h2>
 
-      {/* ---- search bar ---- */}
       <form className="food-search__form" onSubmit={handleSearch}>
         <input
           className="food-search__input"
           type="text"
           placeholder='Search for a food (e.g. "banana")'
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          disabled={loading}
+          value={search.term}
+          onChange={(e) => setSearchField({ term: e.target.value })}
+          disabled={search.loading}
         />
         <button
           className="food-search__button"
           type="submit"
-          disabled={loading || !searchTerm.trim()}
+          disabled={search.loading || !search.term.trim()}
         >
-          {loading ? "Searching…" : "Search"}
+          {search.loading ? "Searching…" : "Search"}
         </button>
       </form>
 
-      {/* ---- error ---- */}
-      {error && <div className="food-search__error">{error}</div>}
+      {search.error && <div className="food-search__error">{search.error}</div>}
+      {search.loading && <p className="food-search__loading">Searching…</p>}
 
-      {/* ---- loading ---- */}
-      {loading && <p className="food-search__loading">Searching…</p>}
-
-      {/* ---- empty state ---- */}
-      {!loading && searched && results.length === 0 && (
+      {!search.loading && search.searched && search.results.length === 0 && (
         <p className="food-search__empty">
           No results found. Try a different search term.
         </p>
       )}
 
-      {/* ---- simple list (no images) ---- */}
-      {!loading && results.length >= 1 && (
+      {!search.loading && search.results.length >= 1 && (
         <ul className="food-search__list">
-          {results.map((item, idx) => (
+          {search.results.map((item, idx) => (
             <li
               key={idx}
-              className="food-search__list-item"
-              onClick={() =>
-                setExpandedIndex((prev) => (prev === idx ? null : idx))
-              }
+              className={`food-search__list-item${
+                expanded?.idx === idx ? " food-search__list-item--expanded" : ""
+              }`}
+              onClick={() => toggleItem(idx)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  setExpandedIndex((prev) => (prev === idx ? null : idx));
+                  toggleItem(idx);
                 }
               }}
             >
-              <strong>{item.food_name}</strong>
-              {item.brand_name ? (
-                <span className="food-search__list-item-description">
-                  — {item.brand_name}
+              <div className="food-search__list-item-header">
+                <span>
+                  <strong>{item.food_name}</strong>
+                  <span className="food-search__list-item-description">
+                    — {item.brand_name || item.food_type}
+                  </span>
                 </span>
-              ) : (
-                <span className="food-search__list-item-description">
-                  — {item.food_type}
+                <span className="food-search__chevron" aria-hidden="true">
+                  {expanded?.idx === idx ? "▲" : "▼"}
                 </span>
-              )}
+              </div>
 
-              {expandedIndex === idx && (
+              {expanded?.idx === idx && (
                 <div
-                  className="food-search__list-item food-search__servings-expander"
+                  className="food-search__expander"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <select
-                    className="food-search__servings-select"
-                    defaultValue=""
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      const servingIndex = Number(e.target.value);
-                      if (Number.isNaN(servingIndex)) return;
-                      handleSelectResult(item, idx, servingIndex);
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select a serving
-                    </option>
-
+                  {/* serving size pills */}
+                  <ul className="food-search__servings-list">
+                    <li className="food-search__servings-label">
+                      Serving size
+                    </li>
                     {item.servings.serving.map((serving, servingIdx) => (
-                      <option
-                        key={`${idx}-${serving.serving_id}-${servingIdx}`}
-                        value={servingIdx}
-                      >
-                        {serving.serving_description ||
-                          `${serving.metric_serving_amount} ${serving.metric_serving_unit}`}
-                      </option>
+                      <li key={`${idx}-${serving.serving_id}-${servingIdx}`}>
+                        <button
+                          className={`food-search__serving-option${
+                            expanded.servingIdx === servingIdx
+                              ? " food-search__serving-option--active"
+                              : ""
+                          }`}
+                          onClick={() => toggleServing(servingIdx)}
+                        >
+                          {serving.serving_description ||
+                            `${serving.metric_serving_amount} ${serving.metric_serving_unit}`}
+                        </button>
+                      </li>
                     ))}
-                  </select>
+                  </ul>
+
+                  {/* amount row — only shown when a serving is selected */}
+                  {expanded.servingIdx !== null && (
+                    <div className="food-search__amounts">
+                      <span className="food-search__servings-label">
+                        Amount
+                      </span>
+                      <div className="food-search__amounts-row">
+                        {COMMON_AMOUNTS.map((amount) => (
+                          <button
+                            key={amount}
+                            className="food-search__amount-pill"
+                            onClick={() =>
+                              handleSelectAmount(
+                                item,
+                                idx,
+                                expanded.servingIdx!,
+                                amount
+                              )
+                            }
+                          >
+                            {amount % 1 === 0 ? amount : amount.toString()}
+                          </button>
+                        ))}
+
+                        {/* custom pill + tooltip */}
+                        <div className="food-search__custom-wrapper">
+                          <button
+                            className={`food-search__amount-pill food-search__amount-pill--custom${
+                              expanded.showCustom
+                                ? " food-search__amount-pill--active"
+                                : ""
+                            }`}
+                            onClick={toggleCustom}
+                          >
+                            Custom
+                          </button>
+                          {expanded.showCustom && (
+                            <div className="food-search__custom-tooltip">
+                              <input
+                                className="food-search__custom-input"
+                                type="number"
+                                min="0.1"
+                                step="0.1"
+                                placeholder="e.g. 2.5"
+                                value={expanded.customInput}
+                                onChange={(e) =>
+                                  setExpanded((prev) =>
+                                    prev
+                                      ? { ...prev, customInput: e.target.value }
+                                      : prev
+                                  )
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter")
+                                    handleCustomSubmit(
+                                      item,
+                                      idx,
+                                      expanded.servingIdx!
+                                    );
+                                }}
+                                autoFocus
+                              />
+                              <button
+                                className="food-search__custom-confirm"
+                                onClick={() =>
+                                  handleCustomSubmit(
+                                    item,
+                                    idx,
+                                    expanded.servingIdx!
+                                  )
+                                }
+                                disabled={
+                                  !expanded.customInput ||
+                                  isNaN(parseFloat(expanded.customInput))
+                                }
+                              >
+                                Add
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </li>

@@ -12,13 +12,18 @@ type PageStatusValue = {
   back: string;
 };
 
+export type SelectedFood = {
+  foodIndex: number;
+  servingIndex: number;
+  amount: number;
+  data: NutritionApi | SearchApi;
+};
+
 type NutritionContextValue = {
   barcode: string;
   setBarcode: React.Dispatch<React.SetStateAction<string>>;
-  productData: NutritionApi | undefined | SearchApi;
-  setProductData: React.Dispatch<
-    React.SetStateAction<NutritionApi | undefined | SearchApi>
-  >;
+  selectedFood: SelectedFood | null;
+  setSelectedFood: React.Dispatch<React.SetStateAction<SelectedFood | null>>;
   tableItems: FoodObject[];
   setTableItems: React.Dispatch<React.SetStateAction<FoodObject[]>>;
   loading: boolean;
@@ -31,30 +36,23 @@ type NutritionContextValue = {
   setPageStatus: React.Dispatch<React.SetStateAction<PageStatusValue>>;
   searchOn: boolean;
   setSearchOn: React.Dispatch<React.SetStateAction<boolean>>;
-  setServingIndex: React.Dispatch<React.SetStateAction<number>>;
-  setSelectedFoodIndex: React.Dispatch<React.SetStateAction<number>>;
 };
 
 const NutritionContext = createContext<NutritionContextValue | null>(null);
 
 export function NutritionProvider({ children }: { children: React.ReactNode }) {
   const [barcode, setBarcode] = useState("");
-  const [productData, setProductData] = useState<
-    NutritionApi | SearchApi | undefined
-  >(undefined);
+  const [selectedFood, setSelectedFood] = useState<SelectedFood | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [servingIndex, setServingIndex] = useState<number>(0);
   const [scannerOn, setScannerOn] = useState<boolean>(false);
   const [searchOn, setSearchOn] = useState<boolean>(false);
   const [tableOn, setTableOn] = useState<boolean>(true);
-  const [selectedFoodIndex, setSelectedFoodIndex] = useState<number>(0);
   const [pageStatus, setPageStatus] = useState<PageStatusValue>({
     current: "home",
     back: "",
   });
   const today = new Date().toLocaleDateString();
 
-  // Initialize tableItems from localStorage safely
   const [tableItems, setTableItems] = useState<FoodObject[]>(() => {
     try {
       const dailyLog = localStorage.getItem("dailyLog");
@@ -89,86 +87,74 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Process productData when it changes
   useEffect(() => {
-    debug.log("context", "productData changed:", productData);
+    debug.log("context", "selectedFood changed:", selectedFood);
 
-    if (!productData) {
-      debug.log("context", "productData is undefined — skipping");
+    if (!selectedFood) {
+      debug.log("context", "selectedFood is null — skipping");
       return;
     }
 
-    // Validate the entire data path
+    const { foodIndex, servingIndex, amount, data } = selectedFood;
+
     let food: BarcodeFoodData | SearchFoodData[];
-    if ("foods_search" in productData.data) {
-      food = productData.data.foods_search.results.food;
-    } else if ("food" in productData.data) {
-      food = productData.data.food;
+    if ("foods_search" in data.data) {
+      food = data.data.foods_search.results.food;
+    } else if ("food" in data.data) {
+      food = data.data.food;
     } else {
       console.error(
-        "data isnt compatible check.\nHere is what's been returned: ",
-        productData
+        "data isn't compatible. Here is what's been returned:",
+        data
       );
       return;
     }
 
     const servings = Array.isArray(food)
-      ? food[selectedFoodIndex].servings?.serving
+      ? food[foodIndex].servings?.serving
       : food.servings.serving;
+
     if (!servings || !Array.isArray(servings) || servings.length === 0) {
       debug.error("context", "Missing or empty 'servings.serving' array", food);
       return;
     }
+
     const name = Array.isArray(food)
-      ? food[selectedFoodIndex].food_name
+      ? food[foodIndex].food_name
       : food.food_name;
-    const protein = servings[servingIndex].protein;
-    const calories = servings[servingIndex].calories;
-    const fats = servings[servingIndex].fat;
-    const sodium = servings[servingIndex].sodium;
+    const serving = servings[servingIndex];
 
-    debug.log("context", "Extracted values:", { name, protein, calories });
+    const multiply = (val: string) => (parseFloat(val) * amount).toFixed(1);
 
-    if (typeof name !== "string") {
-      debug.error("context", `name is not a string: ${typeof name}`, name);
-      return;
-    }
-    if (typeof protein !== "string") {
-      debug.error(
-        "context",
-        `protein is not a string: ${typeof protein}`,
-        protein
-      );
-      return;
-    }
-    if (typeof calories !== "string") {
-      debug.error(
-        "context",
-        `calories is not a string: ${typeof calories}`,
-        calories
-      );
-      return;
-    }
-    if (typeof fats !== "string") {
-      debug.error("context", `calories is not a string: ${typeof fats}`, fats);
-      return;
-    }
-    if (typeof sodium !== "string") {
-      debug.error(
-        "context",
-        `calories is not a string: ${typeof sodium}`,
-        sodium
-      );
+    const protein = serving.protein;
+    const calories = serving.calories;
+    const fats = serving.fat;
+    const sodium = serving.sodium;
+
+    if (
+      typeof name !== "string" ||
+      typeof protein !== "string" ||
+      typeof calories !== "string" ||
+      typeof fats !== "string" ||
+      typeof sodium !== "string"
+    ) {
+      debug.error("context", "One or more nutrition values are not strings", {
+        name,
+        protein,
+        calories,
+        fats,
+        sodium,
+      });
       return;
     }
 
     const newItem: FoodObject = {
-      name,
+      name: amount !== 1 ? `${name} ×${amount}` : name,
       data: [
-        { title: "protein", data: protein },
-        { title: "calories", data: calories },
-        { title: "fats", data: fats },
-        { title: "sodium", data: sodium },
+        { title: "protein", data: multiply(protein) },
+        { title: "calories", data: multiply(calories) },
+        { title: "fats", data: multiply(fats) },
+        { title: "sodium", data: multiply(sodium) },
       ],
     };
 
@@ -183,20 +169,21 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       );
       return updated;
     });
-  }, [productData, servingIndex, selectedFoodIndex]);
+  }, [selectedFood]);
 
-  // Sync tableItems to localStorage
   useEffect(() => {
     debug.log(
       "storage",
       `tableItems changed (length: ${tableItems.length})`,
       tableItems
     );
-
     if (tableItems.length > 0) {
       const payload = [{ date: today, tableItems }];
       debug.log("storage", "Saving to localStorage:", payload);
       localStorage.setItem("dailyLog", JSON.stringify(payload));
+    } else {
+      debug.log("storage", "tableItems empty — clearing localStorage");
+      localStorage.removeItem("dailyLog");
     }
   }, [tableItems]);
 
@@ -204,8 +191,8 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
     () => ({
       barcode,
       setBarcode,
-      productData,
-      setProductData,
+      selectedFood,
+      setSelectedFood,
       tableItems,
       setTableItems,
       loading,
@@ -218,10 +205,8 @@ export function NutritionProvider({ children }: { children: React.ReactNode }) {
       setPageStatus,
       searchOn,
       setSearchOn,
-      setServingIndex,
-      setSelectedFoodIndex,
     }),
-    [barcode, productData, tableOn, scannerOn, tableItems, pageStatus]
+    [barcode, selectedFood, tableOn, scannerOn, tableItems, pageStatus]
   );
 
   return (
