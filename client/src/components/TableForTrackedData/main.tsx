@@ -2,8 +2,10 @@ import { useNutritionContext } from "../../contexts/NutrititonContext";
 import { useState } from "react";
 import "./styles.css";
 import { debug } from "../../utils/debug";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 export default function NutritionTable() {
+  const isMobile = useIsMobile();
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const { tableItems, setTableItems, setTableOn, setScannerOn, setSearchOn } =
     useNutritionContext();
@@ -96,7 +98,7 @@ export default function NutritionTable() {
               <th>Protein</th>
               <th>Fats</th>
               <th>Sodium</th>
-              <th></th>
+              {!isMobile && <th></th>}
             </tr>
           </thead>
           <tbody>
@@ -125,36 +127,65 @@ export default function NutritionTable() {
 
                 return (
                   <tr key={index}>
-                    <td>{item.name}</td>
+                    <td>
+                      {item.name}
+                      {isMobile && (
+                        <button
+                          className="delete-item-btn"
+                          onClick={() => handleDelete(index)}
+                          aria-label={`Delete ${item.name}`}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          </svg>
+                        </button>
+                      )}
+                    </td>
                     <td>{calories ?? 0}</td>
                     <td>{protein ?? 0}g</td>
                     <td>{fats ?? 0}</td>
                     <td>{sodium ?? 0}mg</td>
-                    <td>
-                      <button
-                        className="delete-item-btn"
-                        onClick={() => handleDelete(index)}
-                        aria-label={`Delete ${item.name}`}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="white"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                    {!isMobile && (
+                      <td>
+                        <button
+                          className="delete-item-btn"
+                          onClick={() => handleDelete(index)}
+                          aria-label={`Delete ${item.name}`}
                         >
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                          <path d="M10 11v6" />
-                          <path d="M14 11v6" />
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                        </svg>
-                      </button>
-                    </td>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          </svg>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })

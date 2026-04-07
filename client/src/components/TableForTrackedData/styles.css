@@ -56,6 +56,9 @@
   border-top: 2px solid #374151;
   background: #f9fafb;
   font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 .nutrition-table tbody tr:hover {
@@ -156,104 +159,113 @@
 }
 
 @media screen and (max-width: 600px) {
-  .nutrition-table,
-  .nutrition-table thead,
-  .nutrition-table tbody,
-  .nutrition-table tfoot,
-  .nutrition-table th,
-  .nutrition-table td,
-  .nutrition-table tr {
-    display: block;
+  .nutrition-table-card {
+    width: 100%;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .nutrition-table {
+    font-size: 0.78rem;
+    table-layout: fixed;
     width: 100%;
   }
 
-  .nutrition-table thead {
-    display: none;
+  .nutrition-table th {
+    padding: 8px 4px;
+    font-size: 0;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
-  .nutrition-table tr {
-    margin-bottom: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px;
-    background: #fafafa;
+  .nutrition-table th::after {
+    font-size: 0.7rem;
   }
 
   .nutrition-table td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 10px;
-    border: none;
-    border-bottom: 1px solid #eee;
-    font-size: 0.95rem;
+    padding: 10px 4px;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .nutrition-table td:last-child {
-    border-bottom: none;
+  .nutrition-table th:nth-child(1),
+  .nutrition-table td:nth-child(1) {
+    width: 22%;
   }
 
-  .nutrition-table tbody td:nth-child(1)::before {
-    content: "Item: ";
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .nutrition-table tbody td:nth-child(2)::before {
-    content: "Calories: ";
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .nutrition-table tbody td:nth-child(3)::before {
-    content: "Protein: ";
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .nutrition-table tbody td:nth-child(4)::before {
-    content: "Fats: ";
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .nutrition-table tbody td:nth-child(5)::before {
-    content: "Sodium: ";
-    font-weight: 700;
-    margin-right: 8px;
+  nutrition-table td:nth-child(1) {
+    white-space: normal;
   }
 
-  .nutrition-table tfoot tr {
-    background: #e8f5e9;
-    border: 2px solid #4caf50;
+  .nutrition-table td:nth-child(1) .delete-item-btn {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-left: 4px;
   }
 
-  .nutrition-table tfoot td:nth-child(1)::before {
-    content: "";
-  }
-  .nutrition-table tfoot td:nth-child(2)::before {
-    content: "Calories: ";
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .nutrition-table tfoot td:nth-child(3)::before {
-    content: "Protein: ";
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .nutrition-table tfoot td:nth-child(4)::before {
-    content: "Fats: ";
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .nutrition-table tfoot td:nth-child(5)::before {
-    content: "Sodium: ";
-    font-weight: 700;
-    margin-right: 8px;
-  }
-  .nutrition-table tbody td:nth-child(6) {
-    border-bottom: none;
-    justify-content: flex-end;
+  .nutrition-table th:nth-child(2),
+  .nutrition-table td:nth-child(2),
+  .nutrition-table th:nth-child(3),
+  .nutrition-table td:nth-child(3),
+  .nutrition-table th:nth-child(4),
+  .nutrition-table td:nth-child(4),
+  .nutrition-table th:nth-child(5),
+  .nutrition-table td:nth-child(5) {
+    width: 19%;
+    text-align: left;
   }
 
-  .nutrition-table tfoot td:nth-child(6) {
-    display: none;
+  .nutrition-table th:nth-child(6),
+  .nutrition-table td:nth-child(6) {
+    overflow: visible;
+    text-align: right;
+    padding-right: 8px;
+  }
+
+  .nutrition-table tfoot td {
+    text-align: left;
+  }
+
+  .nutrition-table tfoot td {
+    padding: 10px 4px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .nutrition-table thead th:nth-child(1)::after {
+    content: "Item";
+  }
+  .nutrition-table thead th:nth-child(2)::after {
+    content: "Cal";
+  }
+  .nutrition-table thead th:nth-child(3)::after {
+    content: "Pro";
+  }
+  .nutrition-table thead th:nth-child(4)::after {
+    content: "Fat";
+  }
+  .nutrition-table thead th:nth-child(5)::after {
+    content: "Na";
+  }
+
+  .delete-item-btn {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    padding: 0;
+  }
+
+  .delete-item-btn svg {
+    width: 100%;
+    height: 100%;
   }
 }
 
