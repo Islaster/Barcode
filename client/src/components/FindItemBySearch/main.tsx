@@ -121,12 +121,7 @@ export default function FoodSearch() {
     setContextLoading(false);
   }
 
-  function handleSelectAmount(
-    item: SearchFoodData,
-    idx: number,
-    servingIdx: number,
-    amount: number
-  ) {
+  function handleSelectAmount(idx: number, servingIdx: number, amount: number) {
     setSelectedFood({
       foodIndex: idx,
       servingIndex: servingIdx,
@@ -144,7 +139,7 @@ export default function FoodSearch() {
   ) {
     const amount = parseFloat(expanded?.customInput ?? "");
     if (isNaN(amount) || amount <= 0) return;
-    handleSelectAmount(item, idx, servingIdx, amount);
+    handleSelectAmount(idx, servingIdx, amount);
   }
 
   return (
@@ -248,7 +243,6 @@ export default function FoodSearch() {
                             className="food-search__amount-pill"
                             onClick={() =>
                               handleSelectAmount(
-                                item,
                                 idx,
                                 expanded.servingIdx!,
                                 amount

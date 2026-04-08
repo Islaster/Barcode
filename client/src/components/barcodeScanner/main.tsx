@@ -9,7 +9,7 @@ export default function BarcodeScanner() {
   const isHandlingRef = useRef(false);
   const [isRunning, setIsRunning] = useState(false);
 
-  const { setBarcode, setLoading, setProductData, setScannerOn, setTableOn } =
+  const { setBarcode, setLoading, setSelectedFood, setScannerOn, setTableOn } =
     useNutritionContext();
 
   const allowedFormats = useMemo(
@@ -46,12 +46,17 @@ export default function BarcodeScanner() {
     try {
       const data = await fetchProductByBarcode(detectedBarcode);
       debug.log("scanner", "Setting productData and switching to table view");
-      setProductData(data);
+      setSelectedFood({
+        foodIndex: 0,
+        servingIndex: 0,
+        amount: 1,
+        data,
+      });
       setScannerOn(false);
       setTableOn(true);
     } catch (err) {
       debug.error("scanner", "handleDetected failed", err);
-      setProductData(undefined);
+      setSelectedFood(null);
     } finally {
       setLoading(false);
       isHandlingRef.current = false;
