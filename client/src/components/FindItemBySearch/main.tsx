@@ -132,11 +132,7 @@ export default function FoodSearch() {
     setTableOn(true);
   }
 
-  function handleCustomSubmit(
-    item: SearchFoodData,
-    idx: number,
-    servingIdx: number
-  ) {
+  function handleCustomSubmit(idx: number, servingIdx: number) {
     const amount = parseFloat(expanded?.customInput ?? "");
     if (isNaN(amount) || amount <= 0) return;
     handleSelectAmount(idx, servingIdx, amount);
@@ -284,7 +280,6 @@ export default function FoodSearch() {
                                 onKeyDown={(e) => {
                                   if (e.key === "Enter")
                                     handleCustomSubmit(
-                                      item,
                                       idx,
                                       expanded.servingIdx!
                                     );
@@ -294,11 +289,7 @@ export default function FoodSearch() {
                               <button
                                 className="food-search__custom-confirm"
                                 onClick={() =>
-                                  handleCustomSubmit(
-                                    item,
-                                    idx,
-                                    expanded.servingIdx!
-                                  )
+                                  handleCustomSubmit(idx, expanded.servingIdx!)
                                 }
                                 disabled={
                                   !expanded.customInput ||
