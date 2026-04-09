@@ -70,9 +70,11 @@ export default function BarcodeScanner() {
     constraints: {
       video: {
         facingMode: { ideal: "environment" },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
+        width: { ideal: 3840 },
+        height: { ideal: 2160 },
         frameRate: { ideal: 30 },
+        // @ts-expect-error — focusMode not in all TS type defs yet
+        focusMode: { ideal: "continuous" },
       },
       audio: false,
     },
